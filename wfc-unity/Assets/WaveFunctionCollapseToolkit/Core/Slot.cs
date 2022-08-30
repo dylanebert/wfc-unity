@@ -18,7 +18,7 @@ namespace Wave {
             this.grid = grid;
             possibilities = new bool[size];
             weights = new float[size];
-            affordances = new HashSet<int>[4, size];
+            affordances = new HashSet<int>[6, size];
             entropy = size;
             for(int i = 0; i < size; i++) {
                 possibilities[i] = true;

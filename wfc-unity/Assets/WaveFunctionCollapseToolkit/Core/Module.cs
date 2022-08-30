@@ -8,6 +8,8 @@ namespace Wave {
         public Connection left;
         public Connection up;
         public Connection right;
+        public Connection above;
+        public Connection below;
 
         public bool ConnectsTo(Module other, int direction) {
             switch(direction) {
@@ -19,6 +21,10 @@ namespace Wave {
                     return up.ConnectsTo(other.down);
                 case 3:
                     return right.ConnectsTo(other.left);
+                case 4:
+                    return above.ConnectsTo(other.below);
+                case 5:
+                    return below.ConnectsTo(other.above);
                 default:
                     throw new System.ArgumentException("Invalid direction");
             }

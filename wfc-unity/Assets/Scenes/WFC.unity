@@ -246,20 +246,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   grids:
-  - name: WaveGrid
+  - name: 2D
     modules:
     - {fileID: 11400000, guid: 6c5edb7c6581f23429174381d35b00a6, type: 2}
     - {fileID: 11400000, guid: 3e917c229992a9d4899ac3c3c48f3edc, type: 2}
     - {fileID: 11400000, guid: 5193b501285e0e7439439807069474e4, type: 2}
     - {fileID: 11400000, guid: ba54074c5cd4f7647aa0436ff892f866, type: 2}
     - {fileID: 11400000, guid: 52331a37e86c1444084da57619617881, type: 2}
-    width: 16
-    height: 16
+    width: 8
+    length: 8
+    height: 1
     moduleSize: 4
     offset: {x: 0, y: 0, z: 0}
+  - name: 3D
+    modules:
+    - {fileID: 11400000, guid: 6c5edb7c6581f23429174381d35b00a6, type: 2}
+    - {fileID: 11400000, guid: 3e917c229992a9d4899ac3c3c48f3edc, type: 2}
+    - {fileID: 11400000, guid: 5193b501285e0e7439439807069474e4, type: 2}
+    - {fileID: 11400000, guid: ba54074c5cd4f7647aa0436ff892f866, type: 2}
+    - {fileID: 11400000, guid: f2a2dcde9c3e25347b58dca8e0b35bf0, type: 2}
+    - {fileID: 11400000, guid: 9b78ebf93b8da9c46b8fe3b1ef2a3375, type: 2}
+    - {fileID: 11400000, guid: b87addba94d6f184d93e90fee7537249, type: 2}
+    - {fileID: 11400000, guid: 8de5f8cfe8b7a3e4b8ceffaa99737ee4, type: 2}
+    - {fileID: 11400000, guid: 7c2493a74247194449ede2fbe87f7ef6, type: 2}
+    - {fileID: 11400000, guid: 1d00650e5cdea4948b904b92aeaa8f06, type: 2}
+    - {fileID: 11400000, guid: a958437d70e8a31489180c9ed0999cbc, type: 2}
+    - {fileID: 11400000, guid: cca40bcb0a09e0e408b0e60c8722b334, type: 2}
+    - {fileID: 11400000, guid: 52331a37e86c1444084da57619617881, type: 2}
+    width: 4
+    length: 4
+    height: 4
+    moduleSize: 4
+    offset: {x: 32, y: 0, z: 0}
   loggingLevel: 0
   drawGizmos: 1
-  delay: 1
+  delay: 0.147
 --- !u!4 &1571939096
 Transform:
   m_ObjectHideFlags: 0

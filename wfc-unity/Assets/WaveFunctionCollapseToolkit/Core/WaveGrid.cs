@@ -6,14 +6,15 @@ using UnityEngine;
 namespace Wave {
     [System.Serializable]
     public class WaveGrid {
-        static readonly int[] OPPOSITE = { 2, 3, 0, 1 };
+        static readonly int[] OPPOSITE = { 2, 3, 0, 1, 5, 4 };
         static readonly int MAX_ITERATIONS = 10000;
         static readonly int MAX_ATTEMPTS = 10;
 
         public string name = "WaveGrid";
         public List<Module> modules;
         public int width = 4;
-        public int height = 4;
+        public int length = 4;
+        public int height = 1;
         public float moduleSize = 4f;
         public Vector3 offset;
 
@@ -32,7 +33,21 @@ namespace Wave {
 
         public void Generate() {
             if(task != null && !task.IsCompleted) return;
-            task = GenerateAsync();
+            if(delay >= 0)
+                task = GenerateAsync();
+            else
+                GenerateSync();
+        }
+
+        void GenerateSync() {
+            for(int i = 0; i < MAX_ATTEMPTS; i++) {
+                failed = false;
+                Run();
+                if(failed)
+                    Logging.Log($"Failed attempt {i}");
+                else
+                    break;
+            }
         }
 
         async Task GenerateAsync() {
@@ -46,6 +61,20 @@ namespace Wave {
             }
         }
 
+        void Run() {
+            Clear();
+            InitializeGrid();
+
+            for(int i = 0; i < MAX_ITERATIONS; i++) {
+                int index = NextSlot();
+                if(index >= 0) {
+                    Collapse(index);
+                } else {
+                    return;
+                }
+            }
+        }
+
         async Task RunAsync() {
             Clear();
             InitializeGrid();
@@ -53,14 +82,39 @@ namespace Wave {
             for(int i = 0; i < MAX_ITERATIONS; i++) {
                 int index = NextSlot();
                 if(index >= 0) {
-                    await Collapse(index);
+                    await CollapseAsync(index);
                 } else {
                     return;
                 }
             }
         }
 
-        async Task Propagate(int index, int possibility) {
+        void Propagate(int index, int possibility) {
+            if(failed) return;
+            if(grid[index].entropy <= 1) {
+                failed = true;
+                return;
+            }
+
+            // Remove from possibilities
+            grid[index].RemovePossibility(possibility);
+
+            // Propagate to neighbors
+            for(int i = 0; i < 6; i++) {
+                if(GetAdjacent(index, i, out int adjacent) && !grid[adjacent].collapsed) {
+                    for(int j = 0; j < modules.Count; j++) {
+                        if(!grid[adjacent].possibilities[j]) continue;
+
+                        int opposite = OPPOSITE[i];
+                        grid[adjacent].affordances[opposite, j].Remove(possibility);
+                        if(grid[adjacent].affordances[opposite, j].Count == 0)
+                            Propagate(adjacent, j);
+                    }
+                }
+            }
+        }
+
+        async Task PropagateAsync(int index, int possibility) {
             if(failed) return;
             if(grid[index].entropy <= 1) {
                 failed = true;
@@ -76,7 +130,7 @@ namespace Wave {
             }
 
             // Propagate to neighbors
-            for(int i = 0; i < 4; i++) {
+            for(int i = 0; i < 6; i++) {
                 if(GetAdjacent(index, i, out int adjacent) && !grid[adjacent].collapsed) {
                     for(int j = 0; j < modules.Count; j++) {
                         if(!grid[adjacent].possibilities[j]) continue;
@@ -84,7 +138,7 @@ namespace Wave {
                         int opposite = OPPOSITE[i];
                         grid[adjacent].affordances[opposite, j].Remove(possibility);
                         if(grid[adjacent].affordances[opposite, j].Count == 0)
-                            await Propagate(adjacent, j);
+                            await PropagateAsync(adjacent, j);
                     }
                 }
             }
@@ -96,7 +150,7 @@ namespace Wave {
             float min = float.MaxValue;
             for(int i = 0; i < grid.Length; i++) {
                 if(!grid[i].collapsed && grid[i].entropy <= min) {
-                    float noise = 1e-6f * Random.Range(0f, 1f);
+                    float noise = Random.Range(0f, 1f);
                     if(grid[i].entropy + noise < min) {
                         min = grid[i].entropy + noise;
                         argmin = i;
@@ -106,11 +160,19 @@ namespace Wave {
             return argmin;
         }
 
-        async Task Collapse(int index) {
+        void Collapse(int index) {
             int choice = grid[index].weights.Sample();
             for(int i = 0; i < modules.Count; i++) {
                 if(grid[index].possibilities[i] != (i == choice))
-                    await Propagate(index, i);
+                    Propagate(index, i);
+            }
+        }
+
+        async Task CollapseAsync(int index) {
+            int choice = grid[index].weights.Sample();
+            for(int i = 0; i < modules.Count; i++) {
+                if(grid[index].possibilities[i] != (i == choice))
+                    await PropagateAsync(index, i);
             }
         }
 
@@ -118,32 +180,37 @@ namespace Wave {
             root = new GameObject(name).transform;
             root.SetParent(Generator.instance.transform);
             root.localPosition = offset;
-            grid = new Slot[width * height];
-            Vector3 slotOffset = new Vector3(width * moduleSize / 2f, 0, height * moduleSize / 2f);
+            grid = new Slot[width * length * height];
+            Vector3 slotOffset = new Vector3(width * moduleSize / 2f, height * moduleSize / 2f, length * moduleSize / 2f);
             for(int y = 0; y < height; y++) {
-                for(int x = 0; x < width; x++) {
-                    Slot slot = new GameObject($"slot_{x}_{y}").AddComponent<Slot>();
-                    slot.transform.SetParent(root);
-                    slot.transform.localPosition = new Vector3(
-                        x * moduleSize - slotOffset.x + moduleSize / 2f,
-                        0,
-                        y * moduleSize - slotOffset.z + moduleSize / 2f
-                    );
-                    grid[y * width + x] = slot;
-                    slot.Initialize(this, modules.Count);
+                for(int z = 0; z < length; z++) {
+                    for(int x = 0; x < width; x++) {
+                        int index = (x, y, z).Flatten(this);
+                        Slot slot = new GameObject($"slot_{x}_{y}_{z}").AddComponent<Slot>();
+                        slot.transform.SetParent(root);
+                        slot.transform.localPosition = new Vector3(
+                            x * moduleSize - slotOffset.x + moduleSize / 2f,
+                            y * moduleSize - slotOffset.y + moduleSize / 2f,
+                            z * moduleSize - slotOffset.z + moduleSize / 2f
+                        );
+                        grid[index] = slot;
+                        slot.Initialize(this, modules.Count);
+                    }
                 }
             }
             for(int y = 0; y < height; y++) {
-                for(int x = 0; x < width; x++) {
-                    int index = y * width + x;
-                    for(int i = 0; i < 4; i++) {
-                        if(GetAdjacent(index, i, out _)) {
-                            for(int j = 0; j < modules.Count; j++) {
-                                if(grid[index].possibilities[j]) {
-                                    grid[index].affordances[i, j] = new HashSet<int>();
-                                    for(int k = 0; k < modules.Count; k++) {
-                                        if(modules[j].ConnectsTo(modules[k], i)) {
-                                            grid[index].affordances[i, j].Add(k);
+                for(int z = 0; z < length; z++) {
+                    for(int x = 0; x < width; x++) {
+                        int index = (x, y, z).Flatten(this);
+                        for(int i = 0; i < 6; i++) {
+                            if(GetAdjacent(index, i, out _)) {
+                                for(int j = 0; j < modules.Count; j++) {
+                                    if(grid[index].possibilities[j]) {
+                                        grid[index].affordances[i, j] = new HashSet<int>();
+                                        for(int k = 0; k < modules.Count; k++) {
+                                            if(modules[j].ConnectsTo(modules[k], i)) {
+                                                grid[index].affordances[i, j].Add(k);
+                                            }
                                         }
                                     }
                                 }
@@ -174,11 +241,12 @@ namespace Wave {
             if(grid == null) return;
             Gizmos.color = Color.red;
             for(int y = 0; y < height; y++) {
-                for(int x = 0; x < width; x++) {
-                    Slot slot = grid[y * width + x];
-                    if(slot.collapsed) continue;
-                    for(int i = 0; i < slot.entropy; i++) {
-                        Gizmos.DrawCube(slot.transform.position + Vector3.up * i, Vector3.one);
+                for(int z = 0; z < length; z++) {
+                    for(int x = 0; x < width; x++) {
+                        int index = (x, y, z).Flatten(this);
+                        Slot slot = grid[index];
+                        if(slot.collapsed) continue;
+                        Gizmos.DrawCube(slot.transform.position, Vector3.one * 2f * slot.entropy / modules.Count);
                     }
                 }
             }
@@ -186,12 +254,11 @@ namespace Wave {
 
         bool GetAdjacent(int index, int direction, out int adjacent) {
             adjacent = -1;
-            int x = index % width;
-            int y = index / width;
+            (int x, int y, int z) = index.Reshape(this);
             switch(direction) {
                 // Down
                 case 0:
-                    if(y > 0) {
+                    if(z > 0) {
                         adjacent = index - width;
                         return true;
                     }
@@ -205,7 +272,7 @@ namespace Wave {
                     return false;
                 // Up
                 case 2:
-                    if(y < height - 1) {
+                    if(z < length - 1) {
                         adjacent = index + width;
                         return true;
                     }
@@ -214,6 +281,20 @@ namespace Wave {
                 case 3:
                     if(x < width - 1) {
                         adjacent = index + 1;
+                        return true;
+                    }
+                    return false;
+                // Above
+                case 4:
+                    if(y < height - 1) {
+                        adjacent = index + length * width;
+                        return true;
+                    }
+                    return false;
+                // Below
+                case 5:
+                    if(y > 0) {
+                        adjacent = index - length * width;
                         return true;
                     }
                     return false;

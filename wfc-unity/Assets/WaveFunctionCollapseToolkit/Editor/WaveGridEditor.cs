@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine;
 using Wave;
 
 namespace WaveEditor {
@@ -15,17 +13,10 @@ namespace WaveEditor {
             // Name
             target.name = EditorGUILayout.TextField("Name", target.name);
 
-            // Height, width
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.BeginVertical();
-            EditorGUILayout.LabelField("Width");
-            target.width = EditorGUILayout.IntField(target.width);
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.BeginVertical();
-            EditorGUILayout.LabelField("Height");
-            target.height = EditorGUILayout.IntField(target.height);
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.EndHorizontal();
+            // Dimensions
+            EditorGUILayout.PropertyField(property.FindPropertyRelative("width"));
+            EditorGUILayout.PropertyField(property.FindPropertyRelative("length"));
+            EditorGUILayout.PropertyField(property.FindPropertyRelative("height"));
 
             // Module size
             target.moduleSize = EditorGUILayout.FloatField("Module Size", target.moduleSize);
