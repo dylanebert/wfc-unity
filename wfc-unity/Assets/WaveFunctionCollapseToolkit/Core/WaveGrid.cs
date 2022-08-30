@@ -127,10 +127,7 @@ namespace Wave {
             // Remove from possibilities
             grid[index].RemovePossibility(possibility);
 
-            if(delay >= 0 && ++ticks >= delay) {
-                ticks = 0;
-                await Task.Delay(1);
-            }
+            await Delay();
 
             // Propagate to neighbors
             for(int i = 0; i < 6; i++) {
@@ -146,10 +143,7 @@ namespace Wave {
                 }
             }
 
-            if(delay >= 0 && ++ticks >= delay) {
-                ticks = 0;
-                await Task.Delay(1);
-            }
+            await Delay();
 
             if(grid[index].entropy == 1)
                 grid[index].Collapse();
@@ -184,6 +178,13 @@ namespace Wave {
             for(int i = 0; i < modules.Count; i++) {
                 if(grid[index].possibilities[i] != (i == choice))
                     await PropagateAsync(index, i);
+            }
+        }
+
+        async Task Delay() {
+            if(delay >= 0 && ++ticks >= delay) {
+                ticks = 0;
+                await Task.Delay(1);
             }
         }
 
