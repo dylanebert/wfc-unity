@@ -18,12 +18,12 @@ namespace WaveEditor {
             // Height, width
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.BeginVertical();
-            EditorGUILayout.LabelField("Height");
-            target.height = EditorGUILayout.IntField(target.height);
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.BeginVertical();
             EditorGUILayout.LabelField("Width");
             target.width = EditorGUILayout.IntField(target.width);
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.LabelField("Height");
+            target.height = EditorGUILayout.IntField(target.height);
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
 

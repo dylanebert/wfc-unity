@@ -27,6 +27,7 @@ namespace WaveEditor {
             }
             if(waveGridEditors.Length > 0) {
                 if(GUILayout.Button("Remove Graph")) {
+                    waveGridEditors[generator.grids.Length - 1].target.Clear();
                     Array.Resize(ref generator.grids, generator.grids.Length - 1);
                 }
             }
@@ -35,6 +36,8 @@ namespace WaveEditor {
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("loggingLevel"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("drawGizmos"));
+
+            generator.delay = EditorGUILayout.Slider("Delay", generator.delay, 0f, 1f);
 
             EditorGUILayout.BeginHorizontal();
             if(GUILayout.Button("Generate")) {

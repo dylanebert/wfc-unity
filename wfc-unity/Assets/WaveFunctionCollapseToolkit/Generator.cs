@@ -22,6 +22,7 @@ namespace Wave {
         public WaveGrid[] grids;
         public LoggingLevel loggingLevel;
         public bool drawGizmos;
+        public float delay;
 
         void OnDrawGizmos() {
             if(!drawGizmos) return;
