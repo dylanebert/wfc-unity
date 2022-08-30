@@ -31,7 +31,6 @@ namespace Wave {
             possibilities[index] = false;
             weights[index] = 0;
             entropy--;
-            if(entropy == 1) Collapse();
         }
 
         public void Collapse() {

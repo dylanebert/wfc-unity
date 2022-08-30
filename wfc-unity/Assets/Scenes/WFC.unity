@@ -248,19 +248,10 @@ MonoBehaviour:
   grids:
   - name: 2D
     modules:
+    - {fileID: 11400000, guid: 9d1659c7c48982c4cb2645bebd8da6fe, type: 2}
     - {fileID: 11400000, guid: 6c5edb7c6581f23429174381d35b00a6, type: 2}
-    - {fileID: 11400000, guid: 3e917c229992a9d4899ac3c3c48f3edc, type: 2}
-    - {fileID: 11400000, guid: 5193b501285e0e7439439807069474e4, type: 2}
-    - {fileID: 11400000, guid: ba54074c5cd4f7647aa0436ff892f866, type: 2}
     - {fileID: 11400000, guid: 52331a37e86c1444084da57619617881, type: 2}
-    width: 8
-    length: 8
-    height: 1
-    moduleSize: 4
-    offset: {x: 0, y: 0, z: 0}
-  - name: 3D
-    modules:
-    - {fileID: 11400000, guid: 6c5edb7c6581f23429174381d35b00a6, type: 2}
+    - {fileID: 11400000, guid: 8f7480d2b752f3249a2e65dee4b6e6a3, type: 2}
     - {fileID: 11400000, guid: 3e917c229992a9d4899ac3c3c48f3edc, type: 2}
     - {fileID: 11400000, guid: 5193b501285e0e7439439807069474e4, type: 2}
     - {fileID: 11400000, guid: ba54074c5cd4f7647aa0436ff892f866, type: 2}
@@ -272,15 +263,14 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 1d00650e5cdea4948b904b92aeaa8f06, type: 2}
     - {fileID: 11400000, guid: a958437d70e8a31489180c9ed0999cbc, type: 2}
     - {fileID: 11400000, guid: cca40bcb0a09e0e408b0e60c8722b334, type: 2}
-    - {fileID: 11400000, guid: 52331a37e86c1444084da57619617881, type: 2}
-    width: 4
-    length: 4
+    width: 16
+    length: 16
     height: 4
     moduleSize: 4
-    offset: {x: 32, y: 0, z: 0}
+    offset: {x: 0, y: 0, z: 0}
   loggingLevel: 0
   drawGizmos: 1
-  delay: 0.147
+  delay: 0
 --- !u!4 &1571939096
 Transform:
   m_ObjectHideFlags: 0

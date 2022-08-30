@@ -68,7 +68,7 @@ namespace Wave {
             for(int i = 0; i < MAX_ITERATIONS; i++) {
                 int index = NextSlot();
                 if(index >= 0) {
-                    Collapse(index);
+                    Observe(index);
                 } else {
                     return;
                 }
@@ -112,6 +112,9 @@ namespace Wave {
                     }
                 }
             }
+
+            if(grid[index].entropy == 1)
+                grid[index].Collapse();
         }
 
         async Task PropagateAsync(int index, int possibility) {
@@ -142,6 +145,14 @@ namespace Wave {
                     }
                 }
             }
+
+            if(delay >= 0 && ++ticks >= delay) {
+                ticks = 0;
+                await Task.Delay(1);
+            }
+
+            if(grid[index].entropy == 1)
+                grid[index].Collapse();
         }
 
         int NextSlot() {
@@ -160,7 +171,7 @@ namespace Wave {
             return argmin;
         }
 
-        void Collapse(int index) {
+        void Observe(int index) {
             int choice = grid[index].weights.Sample();
             for(int i = 0; i < modules.Count; i++) {
                 if(grid[index].possibilities[i] != (i == choice))
