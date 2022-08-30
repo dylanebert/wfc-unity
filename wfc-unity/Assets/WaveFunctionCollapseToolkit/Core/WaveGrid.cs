@@ -8,6 +8,7 @@ namespace Wave {
     public class WaveGrid {
         static readonly int[] OPPOSITE = { 2, 3, 0, 1 };
         static readonly int MAX_ITERATIONS = 10000;
+        static readonly int MAX_ATTEMPTS = 10;
 
         public string name = "WaveGrid";
         public List<Module> modules;
@@ -16,10 +17,14 @@ namespace Wave {
         public float moduleSize = 4f;
         public Vector3 offset;
 
+        int delay => Generator.instance.delay > 0 ? Mathf.CeilToInt(1 / Generator.instance.delay) : -1;
+
         Transform root;
         Stack<(int, int)> stack;
         Slot[] grid;
         Task task;
+        int ticks;
+        bool failed;
 
         public WaveGrid() {
             stack = new Stack<(int, int)>();
@@ -27,70 +32,70 @@ namespace Wave {
 
         public void Generate() {
             if(task != null && !task.IsCompleted) return;
-            if(Generator.instance.delay > 0)
-                task = RunAsync();
-            else
-                Run();
+            task = GenerateAsync();
         }
 
-        void Run() {
-            Clear();
-            InitializeGrid();
-            for(int i = 0; i < MAX_ITERATIONS; i++) {
-                int index = NextSlot();
-                if(index >= 0) {
-                    Solve(index);
-                    while(stack.Count > 0)
-                        Propagate();
-                } else return;
+        async Task GenerateAsync() {
+            for(int i = 0; i < MAX_ATTEMPTS; i++) {
+                failed = false;
+                await RunAsync();
+                if(failed)
+                    Logging.Log($"Failed attempt {i}");
+                else
+                    break;
             }
         }
 
         async Task RunAsync() {
             Clear();
             InitializeGrid();
-            int milliseconds = Mathf.CeilToInt(Generator.instance.delay * 1000);
+
             for(int i = 0; i < MAX_ITERATIONS; i++) {
                 int index = NextSlot();
                 if(index >= 0) {
-                    Solve(index);
-                    while(stack.Count > 0) {
-                        Propagate();
-                        await Task.Delay(milliseconds);
-                    }
+                    await Collapse(index);
                 } else {
                     return;
                 }
             }
         }
 
-        void Propagate() {
-            (int index, int possibility) = stack.Pop();
-            if(grid[index].solved)
-                grid[index].Collapse();
+        async Task Propagate(int index, int possibility) {
+            if(failed) return;
+            if(grid[index].entropy <= 1) {
+                failed = true;
+                return;
+            }
 
-            // Iterate possible modules in neighbors
+            // Remove from possibilities
+            grid[index].RemovePossibility(possibility);
+
+            if(delay >= 0 && ++ticks >= delay) {
+                ticks = 0;
+                await Task.Delay(1);
+            }
+
+            // Propagate to neighbors
             for(int i = 0; i < 4; i++) {
-                if(GetAdjacent(index, i, out int adjacent) && !grid[adjacent].solved) {
+                if(GetAdjacent(index, i, out int adjacent) && !grid[adjacent].collapsed) {
                     for(int j = 0; j < modules.Count; j++) {
                         if(!grid[adjacent].possibilities[j]) continue;
 
-                        // Check if the possibility should now be removed
                         int opposite = OPPOSITE[i];
                         grid[adjacent].affordances[opposite, j].Remove(possibility);
-                        if(grid[adjacent].affordances[opposite, j].Count == 0) {
-                            Constrain(adjacent, j);
-                        }
+                        if(grid[adjacent].affordances[opposite, j].Count == 0)
+                            await Propagate(adjacent, j);
                     }
                 }
             }
         }
 
         int NextSlot() {
-            float min = float.MaxValue;
             int argmin = -1;
+            if(failed) return argmin;
+            float min = float.MaxValue;
             for(int i = 0; i < grid.Length; i++) {
-                if(!grid[i].solved && grid[i].entropy <= min) {
+                if(!grid[i].collapsed && grid[i].entropy <= min) {
                     float noise = 1e-6f * Random.Range(0f, 1f);
                     if(grid[i].entropy + noise < min) {
                         min = grid[i].entropy + noise;
@@ -101,17 +106,12 @@ namespace Wave {
             return argmin;
         }
 
-        void Solve(int index) {
+        async Task Collapse(int index) {
             int choice = grid[index].weights.Sample();
             for(int i = 0; i < modules.Count; i++) {
                 if(grid[index].possibilities[i] != (i == choice))
-                    Constrain(index, i);
+                    await Propagate(index, i);
             }
-        }
-
-        void Constrain(int index, int possibility) {
-            grid[index].RemovePossibility(possibility);
-            stack.Push((index, possibility));
         }
 
         void InitializeGrid() {
@@ -176,7 +176,7 @@ namespace Wave {
             for(int y = 0; y < height; y++) {
                 for(int x = 0; x < width; x++) {
                     Slot slot = grid[y * width + x];
-                    if(slot.solved) continue;
+                    if(slot.collapsed) continue;
                     for(int i = 0; i < slot.entropy; i++) {
                         Gizmos.DrawCube(slot.transform.position + Vector3.up * i, Vector3.one);
                     }

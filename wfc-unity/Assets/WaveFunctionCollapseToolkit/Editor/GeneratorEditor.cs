@@ -12,6 +12,7 @@ namespace WaveEditor {
 
         public override void OnInspectorGUI() {
             CheckWaveGridEditors();
+            EditorGUI.BeginChangeCheck();
             SerializedProperty grids = serializedObject.FindProperty("grids");
             for(int i = 0; i < waveGridEditors.Length; i++) {
                 SerializedProperty grid = grids.GetArrayElementAtIndex(i);
@@ -19,6 +20,8 @@ namespace WaveEditor {
                 waveGridEditors[i].OnInspectorGUI(grid);
                 EditorGUILayout.Space();
             }
+            if(EditorGUI.EndChangeCheck())
+                Clear();
 
             EditorGUILayout.BeginHorizontal();
             if(GUILayout.Button("Add Graph")) {
@@ -44,13 +47,16 @@ namespace WaveEditor {
                 for(int i = 0; i < waveGridEditors.Length; i++)
                     waveGridEditors[i].target.Generate();
             }
-            if(GUILayout.Button("Clear")) {
-                for(int i = 0; i < waveGridEditors.Length; i++)
-                    waveGridEditors[i].target.Clear();
-            }
+            if(GUILayout.Button("Clear"))
+                Clear();
             EditorGUILayout.EndHorizontal();
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        void Clear() {
+            for(int i = 0; i < waveGridEditors.Length; i++)
+                waveGridEditors[i].target.Clear();
         }
 
         void CheckWaveGridEditors() {

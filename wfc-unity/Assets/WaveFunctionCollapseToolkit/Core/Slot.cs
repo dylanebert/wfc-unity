@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Wave {
@@ -8,7 +9,7 @@ namespace Wave {
         public HashSet<int>[,] affordances { get; private set; }
         public int entropy { get; private set; }
 
-        public bool solved => entropy == 1;
+        public bool collapsed => entropy == 1;
 
         WaveGrid grid;
         GameObject child;
@@ -30,16 +31,34 @@ namespace Wave {
             possibilities[index] = false;
             weights[index] = 0;
             entropy--;
+            if(entropy == 1) Collapse();
         }
 
         public void Collapse() {
             for(int i = 0; i < possibilities.Length; i++) {
                 if(possibilities[i]) {
                     GameObject prefab = grid.modules[i].prefab;
-                    if(prefab != null)
+                    if(prefab != null) {
                         child = Instantiate(prefab, transform);
+                        if(Generator.instance.delay > 0)
+                            TweenIn();
+                    }
                     break;
                 }
+            }
+        }
+
+        async void TweenIn() {
+            int ticks = 0;
+            float value = 0;
+            child.transform.localScale = Vector3.zero;
+            while(ticks < 5) {
+                ticks++;
+                value = Mathf.Pow((ticks / 5f), 4);
+                child.transform.localScale = Vector3.one * value;
+                await Task.Delay(10);
+                if(child == null)
+                    break;
             }
         }
 
