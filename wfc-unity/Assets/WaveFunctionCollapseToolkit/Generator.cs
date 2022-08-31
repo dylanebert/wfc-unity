@@ -24,6 +24,13 @@ namespace Wave {
         public bool drawGizmos;
         public float delay;
 
+        void Update() {
+            if(Input.GetKeyDown(KeyCode.B)) {
+                for(int i = 0; i < grids.Length; i++)
+                    grids[i].Generate();
+            }
+        }
+
         void OnDrawGizmos() {
             if(!drawGizmos) return;
             for(int i = 0; i < grids.Length; i++)
@@ -32,7 +39,7 @@ namespace Wave {
 
         void OnValidate() {
             for(int i = 0; i < grids.Length; i++)
-                grids[i].Clear(true);            
+                grids[i].Clear(true);
         }
     }
 }

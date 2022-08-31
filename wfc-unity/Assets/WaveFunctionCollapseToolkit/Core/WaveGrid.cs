@@ -33,10 +33,14 @@ namespace Wave {
 
         public void Generate() {
             if(task != null && !task.IsCompleted) return;
+#if UNITY_EDITOR
             if(delay >= 0)
                 task = GenerateAsync();
             else
                 GenerateSync();
+#else
+            task = GenerateAsync();
+#endif
         }
 
         void GenerateSync() {

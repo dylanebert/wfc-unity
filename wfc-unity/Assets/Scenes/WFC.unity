@@ -255,8 +255,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 5193b501285e0e7439439807069474e4, type: 2}
     - {fileID: 11400000, guid: ba54074c5cd4f7647aa0436ff892f866, type: 2}
     - {fileID: 11400000, guid: 9d1659c7c48982c4cb2645bebd8da6fe, type: 2}
-    width: 32
-    length: 32
+    width: 16
+    length: 16
     height: 1
     moduleSize: 4
     offset: {x: 0, y: 0, z: 0}
